@@ -2,7 +2,290 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Menu, X, ArrowUpRight, ChevronDown, House, Building2, KeyRound, Trees, Newspaper, MapPin } from "lucide-react";
-const propertyLinks=[{name:"New Properties",href:"/new-properties",desc:"New launches & investment",icon:House},{name:"Resale Properties",href:"/resale",desc:"Pre-owned homes & upgrades",icon:KeyRound},{name:"Rent a Property",href:"/rent",desc:"Homes for every chapter",icon:Building2},{name:"Commercial",href:"/commercial",desc:"Office, retail & business",icon:Building2},{name:"Property Journal / Blog",href:"/blog",desc:"Guides, insights & updates",icon:Newspaper},{name:"Farm Plots & Land",href:"/land",desc:"Plots, land & open spaces",icon:Trees}];
-const companyLinks=[{name:"About Butterfly Homes",href:"/about",desc:"Our story & founder"},{name:"Locations",href:"/locations",desc:"Explore areas we serve"}];
-export default function Navbar(){const [open,setOpen]=useState(false);const [dropdown,setDropdown]=useState("");return <header className="fixed left-0 right-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-4"><nav onMouseLeave={()=>setDropdown("")} className="relative mx-auto flex max-w-[1440px] items-center justify-between rounded-[22px] border border-white/80 bg-white/90 px-4 py-3 shadow-[0_14px_45px_rgba(21,26,58,.09)] backdrop-blur-2xl md:rounded-full md:px-6"><Link href="/" onClick={()=>{setOpen(false);setDropdown("")}} className="flex shrink-0 items-center gap-2.5"><span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white"><Image src="/logo.png" alt="Butterfly Homes logo" width={48} height={48} className="object-contain" priority/></span><span className="leading-none"><span className="block text-[17px] font-bold tracking-tight text-[#151A3A]">Butterfly <span className="gradient-text">Homes</span></span><span className="mt-1.5 block text-[8px] font-semibold uppercase tracking-[.25em] text-slate-400">Real estate · Reimagined</span></span></Link><div className="hidden items-center gap-1 xl:flex"><Link href="/" className="rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]">Home</Link><Link href="/properties" className="rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]">Buy a Home</Link><div className="relative" onMouseEnter={()=>setDropdown("property")}><button onClick={()=>setDropdown(dropdown==="property"?"":"property")} className={`flex items-center gap-1 rounded-full px-3 py-2.5 text-[13px] font-medium transition hover:bg-slate-50 ${dropdown==="property"?"text-[#3C4592]":"text-slate-600"}`} aria-expanded={dropdown==="property"}>Discover Properties <ChevronDown size={14} className={`transition ${dropdown==="property"?"rotate-180":""}`}/></button>{dropdown==="property"&&<div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-4"><div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-[0_25px_70px_rgba(21,26,58,.16)]"><div className="mb-3 px-3 pt-2"><p className="text-[10px] font-bold uppercase tracking-[.22em] text-indigo-700">Find your next move</p><p className="mt-1 text-sm text-slate-500">A space for every plan.</p></div><div className="grid grid-cols-2 gap-1">{propertyLinks.map(item=>{const Icon=item.icon;return <Link key={item.href} href={item.href} onClick={()=>setDropdown("")} className="group flex gap-3 rounded-2xl p-3 transition hover:bg-[#f6f7fc]"><span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition group-hover:bg-[#151a3a] group-hover:text-white"><Icon size={18}/></span><span><span className="block text-sm font-semibold text-[#151a3a]">{item.name}</span><span className="mt-1 block text-xs leading-5 text-slate-500">{item.desc}</span></span></Link>})}</div></div></div>}</div><div className="relative" onMouseEnter={()=>setDropdown("company")}><button onClick={()=>setDropdown(dropdown==="company"?"":"company")} className="flex items-center gap-1 rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]" aria-expanded={dropdown==="company"}>Company <ChevronDown size={14} className={`transition ${dropdown==="company"?"rotate-180":""}`}/></button>{dropdown==="company"&&<div className="absolute right-0 top-full z-50 w-72 pt-4"><div className="rounded-3xl border border-slate-100 bg-white p-3 shadow-[0_25px_70px_rgba(21,26,58,.16)]">{companyLinks.map(item=><Link key={item.href} href={item.href} onClick={()=>setDropdown("")} className="flex gap-3 rounded-2xl p-3 transition hover:bg-slate-50"><MapPin size={17} className="mt-0.5 text-indigo-700"/><span><span className="block text-sm font-semibold text-[#151a3a]">{item.name}</span><span className="mt-1 block text-xs text-slate-500">{item.desc}</span></span></Link>)}</div></div>}</div></div><div className="hidden shrink-0 items-center gap-3 xl:flex"><Link href="/sell" className="rounded-full px-3 py-2.5 text-[13px] font-semibold text-indigo-700 transition hover:bg-indigo-50">Sell Property</Link><Link href="/contact" className="group flex items-center gap-2 rounded-full bg-[#151A3A] px-5 py-3 text-[13px] font-semibold text-white shadow-lg shadow-indigo-950/10 transition hover:bg-[#3C4592]">Speak to an Expert <ArrowUpRight size={15} className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"/></Link></div><button type="button" onClick={()=>setOpen(!open)} className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151A3A] text-white xl:hidden" aria-label={open?"Close navigation":"Open navigation"} aria-expanded={open}>{open?<X size={19}/>:<Menu size={19}/>}</button></nav>{open&&<div className="mx-auto mt-3 max-h-[78vh] max-w-[1440px] overflow-y-auto rounded-3xl border border-white/70 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl xl:hidden"><Link href="/properties" onClick={()=>setOpen(false)} className="block rounded-xl px-4 py-3 font-semibold text-[#151a3a] hover:bg-slate-50">Buy a Home</Link><p className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.2em] text-indigo-700">Discover properties</p>{propertyLinks.map(item=><Link key={item.href} href={item.href} onClick={()=>setOpen(false)} className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">{item.name}<ArrowUpRight size={15}/></Link>)}<p className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.2em] text-indigo-700">Butterfly Homes</p>{companyLinks.map(item=><Link key={item.href} href={item.href} onClick={()=>setOpen(false)} className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50">{item.name}</Link>)}<Link href="/sell" onClick={()=>setOpen(false)} className="mt-4 block rounded-xl px-4 py-3 text-center font-semibold text-indigo-700 hover:bg-indigo-50">Sell Property</Link><Link href="/contact" onClick={()=>setOpen(false)} className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#151A3A] px-5 py-3.5 text-sm font-semibold text-white">Speak to an Expert <ArrowUpRight size={16}/></Link></div>}</header>}
+import {
+  Menu,
+  X,
+  ArrowUpRight,
+  ChevronDown,
+  House,
+  Building2,
+  KeyRound,
+  Trees,
+  Newspaper,
+  MapPin,
+} from "lucide-react";
+const propertyLinks = [
+  {
+    name: "New Properties",
+    href: "/new-properties",
+    desc: "New launches & investment",
+    icon: House,
+  },
+  {
+    name: "Resale Properties",
+    href: "/resale",
+    desc: "Pre-owned homes & upgrades",
+    icon: KeyRound,
+  },
+  {
+    name: "Rent a Property",
+    href: "/rent",
+    desc: "Homes for every chapter",
+    icon: Building2,
+  },
+  {
+    name: "Commercial",
+    href: "/commercial",
+    desc: "Office, retail & business",
+    icon: Building2,
+  },
+  {
+    name: "Property Journal / Blog",
+    href: "/blog",
+    desc: "Guides, insights & updates",
+    icon: Newspaper,
+  },
+  {
+    name: "Farm Plots & Land",
+    href: "/land",
+    desc: "Plots, land & open spaces",
+    icon: Trees,
+  },
+];
+const companyLinks = [
+  {
+    name: "About Butterfly Homes",
+    href: "/about",
+    desc: "Our story & founder",
+  },
+  { name: "Locations", href: "/locations", desc: "Explore areas we serve" },
+];
+export default function Navbar() {
+  const [open, setOpen] = useState(false);
+  const [dropdown, setDropdown] = useState("");
+  return (
+    <header className="fixed left-0 right-0 top-0 z-50 px-3 pt-3 md:px-6 md:pt-4">
+      <nav
+        onMouseLeave={() => setDropdown("")}
+        className="relative mx-auto flex max-w-[1440px] items-center justify-between rounded-[22px] border border-white/80 bg-white/90 px-4 py-3 shadow-[0_14px_45px_rgba(21,26,58,.09)] backdrop-blur-2xl md:rounded-full md:px-6"
+      >
+        <Link
+          href="/"
+          onClick={() => {
+            setOpen(false);
+            setDropdown("");
+          }}
+          className="flex shrink-0 items-center gap-2.5"
+        >
+          <span className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-white">
+            <Image
+              src="/logo.png"
+              alt="Butterfly Homes logo"
+              width={100}
+              height={100}
+              className="object-contain"
+              priority
+            />
+          </span>
+          <span className="leading-none">
+            <span className="block text-[17px] font-bold tracking-tight text-[#151A3A]">
+              Butterfly <span className="gradient-text">Homes</span>
+            </span>
+            <span className="mt-1.5 block text-[8px] font-semibold uppercase tracking-[.25em] text-slate-400">
+              Real estate · Reimagined
+            </span>
+          </span>
+        </Link>
+        <div className="hidden items-center gap-1 xl:flex">
+          <Link
+            href="/"
+            className="rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]"
+          >
+            Home
+          </Link>
+          <Link
+            href="/properties"
+            className="rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]"
+          >
+            Buy a Home
+          </Link>
+          <div
+            className="relative"
+            onMouseEnter={() => setDropdown("property")}
+          >
+            <button
+              onClick={() =>
+                setDropdown(dropdown === "property" ? "" : "property")
+              }
+              className={`flex items-center gap-1 rounded-full px-3 py-2.5 text-[13px] font-medium transition hover:bg-slate-50 ${dropdown === "property" ? "text-[#3C4592]" : "text-slate-600"}`}
+              aria-expanded={dropdown === "property"}
+            >
+              Discover Properties{" "}
+              <ChevronDown
+                size={14}
+                className={`transition ${dropdown === "property" ? "rotate-180" : ""}`}
+              />
+            </button>
+            {dropdown === "property" && (
+              <div className="absolute left-1/2 top-full z-50 w-[560px] -translate-x-1/2 pt-4">
+                <div className="rounded-3xl border border-slate-100 bg-white p-4 shadow-[0_25px_70px_rgba(21,26,58,.16)]">
+                  <div className="mb-3 px-3 pt-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[.22em] text-indigo-700">
+                      Find your next move
+                    </p>
+                    <p className="mt-1 text-sm text-slate-500">
+                      A space for every plan.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {propertyLinks.map((item) => {
+                      const Icon = item.icon;
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setDropdown("")}
+                          className="group flex gap-3 rounded-2xl p-3 transition hover:bg-[#f6f7fc]"
+                        >
+                          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 transition group-hover:bg-[#151a3a] group-hover:text-white">
+                            <Icon size={18} />
+                          </span>
+                          <span>
+                            <span className="block text-sm font-semibold text-[#151a3a]">
+                              {item.name}
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-500">
+                              {item.desc}
+                            </span>
+                          </span>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="relative" onMouseEnter={() => setDropdown("company")}>
+            <button
+              onClick={() =>
+                setDropdown(dropdown === "company" ? "" : "company")
+              }
+              className="flex items-center gap-1 rounded-full px-3 py-2.5 text-[13px] font-medium text-slate-600 transition hover:bg-slate-50 hover:text-[#3C4592]"
+              aria-expanded={dropdown === "company"}
+            >
+              Company{" "}
+              <ChevronDown
+                size={14}
+                className={`transition ${dropdown === "company" ? "rotate-180" : ""}`}
+              />
+            </button>
+            {dropdown === "company" && (
+              <div className="absolute right-0 top-full z-50 w-72 pt-4">
+                <div className="rounded-3xl border border-slate-100 bg-white p-3 shadow-[0_25px_70px_rgba(21,26,58,.16)]">
+                  {companyLinks.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={() => setDropdown("")}
+                      className="flex gap-3 rounded-2xl p-3 transition hover:bg-slate-50"
+                    >
+                      <MapPin size={17} className="mt-0.5 text-indigo-700" />
+                      <span>
+                        <span className="block text-sm font-semibold text-[#151a3a]">
+                          {item.name}
+                        </span>
+                        <span className="mt-1 block text-xs text-slate-500">
+                          {item.desc}
+                        </span>
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="hidden shrink-0 items-center gap-3 xl:flex">
+          <Link
+            href="/sell"
+            className="rounded-full px-3 py-2.5 text-[13px] font-semibold text-indigo-700 transition hover:bg-indigo-50"
+          >
+            Sell Property
+          </Link>
+          <Link
+            href="/contact"
+            className="group flex items-center gap-2 rounded-full bg-[#151A3A] px-5 py-3 text-[13px] font-semibold text-white shadow-lg shadow-indigo-950/10 transition hover:bg-[#3C4592]"
+          >
+            Speak to an Expert{" "}
+            <ArrowUpRight
+              size={15}
+              className="transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+            />
+          </Link>
+        </div>
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#151A3A] text-white xl:hidden"
+          aria-label={open ? "Close navigation" : "Open navigation"}
+          aria-expanded={open}
+        >
+          {open ? <X size={19} /> : <Menu size={19} />}
+        </button>
+      </nav>
+      {open && (
+        <div className="mx-auto mt-3 max-h-[78vh] max-w-[1440px] overflow-y-auto rounded-3xl border border-white/70 bg-white/95 p-4 shadow-2xl backdrop-blur-2xl xl:hidden">
+          <Link
+            href="/properties"
+            onClick={() => setOpen(false)}
+            className="block rounded-xl px-4 py-3 font-semibold text-[#151a3a] hover:bg-slate-50"
+          >
+            Buy a Home
+          </Link>
+          <p className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.2em] text-indigo-700">
+            Discover properties
+          </p>
+          {propertyLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              {item.name}
+              <ArrowUpRight size={15} />
+            </Link>
+          ))}
+          <p className="px-4 pb-2 pt-4 text-[10px] font-bold uppercase tracking-[.2em] text-indigo-700">
+            Butterfly Homes
+          </p>
+          {companyLinks.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => setOpen(false)}
+              className="block rounded-xl px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            >
+              {item.name}
+            </Link>
+          ))}
+          <Link
+            href="/sell"
+            onClick={() => setOpen(false)}
+            className="mt-4 block rounded-xl px-4 py-3 text-center font-semibold text-indigo-700 hover:bg-indigo-50"
+          >
+            Sell Property
+          </Link>
+          <Link
+            href="/contact"
+            onClick={() => setOpen(false)}
+            className="mt-2 flex items-center justify-center gap-2 rounded-full bg-[#151A3A] px-5 py-3.5 text-sm font-semibold text-white"
+          >
+            Speak to an Expert <ArrowUpRight size={16} />
+          </Link>
+        </div>
+      )}
+    </header>
+  );
+}
