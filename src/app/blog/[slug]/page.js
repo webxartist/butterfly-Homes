@@ -1,0 +1,19 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import connectDB from "@/lib/mongodb";
+import BlogPost from "@/models/BlogPost";
+export const dynamic="force-dynamic";
+async function getPost(slug){try{await connectDB();const p=await BlogPost.findOne({slug,status:"Published"}).lean();return p?JSON.parse(JSON.stringify(p)):null;}catch{return null;}}
+export async function generateMetadata({params}){const {slug}=await params;const p=await getPost(slug);if(!p)return {title:"Article not found | Butterfly Homes"};return {title:p.seoTitle||p.title,description:p.seoDescription||p.excerpt,openGraph:{title:p.seoTitle||p.title,description:p.seoDescription||p.excerpt,images:p.coverImage?[p.coverImage]:[]},alternates:{canonical:`/blog/${p.slug}`}};}
+function ArticleContent({ content }) {
+  const blocks = String(content || "").split(/\n\s*\n/).map(x => x.trim()).filter(Boolean);
+  return <div className="prose prose-slate mt-10 max-w-none text-base leading-8">{blocks.map((block, i) => {
+    const lines = block.split("\n");
+    if (lines.every(line => /^\s*[-*]\s+/.test(line))) return <ul key={i}>{lines.map((line, j) => <li key={j}>{line.replace(/^\s*[-*]\s+/, "")}</li>)}</ul>;
+    if (block.startsWith("### ")) return <h3 key={i}>{block.slice(4)}</h3>;
+    if (block.startsWith("## ")) return <h2 key={i}>{block.slice(3)}</h2>;
+    if (block.startsWith("# ")) return <h2 key={i}>{block.slice(2)}</h2>;
+    return <p key={i}>{lines.map((line, j) => <span key={j}>{j > 0 && <br/>}{line}</span>)}</p>;
+  })}</div>;
+}
+export default async function BlogArticle({params}){const {slug}=await params;const p=await getPost(slug);if(!p)notFound();const faqs=p.faq||[];const jsonLd={"@context":"https://schema.org","@type":"Article","headline":p.title,"description":p.seoDescription||p.excerpt,"image":p.coverImage?[p.coverImage]:undefined,"author":{"@type":"Person","name":p.author},"datePublished":p.publishedAt||p.createdAt,"dateModified":p.updatedAt};return <main className="min-h-screen bg-white pb-20 pt-32"><script type="application/ld+json" dangerouslySetInnerHTML={{__html:JSON.stringify(jsonLd).replace(/</g,"\\u003c")}}/><article className="container-butterfly max-w-4xl"><Link href="/blog" className="text-sm font-medium text-indigo-700">← All insights</Link><p className="mt-8 text-xs font-semibold uppercase tracking-[.25em] text-indigo-700">{p.category}</p><h1 className="mt-4 font-display text-4xl leading-tight text-[#151a3a] md:text-6xl">{p.title}</h1>{p.excerpt&&<p className="mt-5 text-lg leading-8 text-slate-600">{p.excerpt}</p>}<p className="mt-4 text-sm text-slate-400">By {p.author} · {new Date(p.publishedAt||p.createdAt).toLocaleDateString("en-IN",{day:"numeric",month:"long",year:"numeric"})}</p>{p.coverImage&&<div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-3xl bg-slate-100"> <img src={p.coverImage} alt={p.title} className="absolute inset-0 h-full w-full object-cover"/></div>}<ArticleContent content={p.content}/>{faqs.length>0&&<section className="mt-12 border-t border-slate-200 pt-8"><h2 className="text-2xl font-semibold text-[#151a3a]">Frequently asked questions</h2><div className="mt-5 space-y-5">{faqs.map((f,i)=><div key={i}><h3 className="font-semibold text-[#151a3a]">{f.question}</h3><p className="mt-2 leading-7 text-slate-600">{f.answer}</p></div>)}</div></section>}<div className="mt-12 rounded-3xl bg-[#f5f7fb] p-7 md:p-10"><h2 className="text-2xl font-semibold text-[#151a3a]">Need help with your property plans?</h2><p className="mt-3 text-slate-600">Tell Butterfly Homes what you are looking for and our team can help you explore the next step.</p><Link href="/contact" className="mt-5 inline-flex rounded-full bg-[#151a3a] px-6 py-3 text-sm font-semibold text-white">Talk to our team ↗</Link></div></article></main>}

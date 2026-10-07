@@ -1,0 +1,7 @@
+import { NextResponse } from "next/server";
+import connectDB from "@/lib/mongodb";
+import BlogPost from "@/models/BlogPost";
+import { requireAdmin } from "@/lib/admin-auth";
+export const runtime = "nodejs";
+export async function PUT(request, { params }) { try { await requireAdmin(); await connectDB(); const { id }=await params; const data=await request.json(); delete data._id; delete data.createdAt; delete data.updatedAt; delete data.__v; if(!data.title?.trim()||!data.content?.trim()) return NextResponse.json({error:"Title and article content are required."},{status:400}); if(data.status==="Published"&&!data.publishedAt)data.publishedAt=new Date(); if(data.status!=="Published")data.publishedAt=null; const item=await BlogPost.findByIdAndUpdate(id,{$set:data},{new:true,runValidators:true}); if(!item)return NextResponse.json({error:"Article not found."},{status:404}); return NextResponse.json({item}); } catch(e) { return NextResponse.json({error:e.status===401?"Unauthorized":e.code===11000?"That slug is already in use.":e.message||"Could not update article."},{status:e.status||500}); } }
+export async function DELETE(request,{params}) { try { await requireAdmin(); await connectDB(); const {id}=await params; const item=await BlogPost.findByIdAndDelete(id); if(!item)return NextResponse.json({error:"Article not found."},{status:404}); return NextResponse.json({ok:true}); } catch(e) { return NextResponse.json({error:e.status===401?"Unauthorized":"Could not delete article."},{status:e.status||500}); } }
