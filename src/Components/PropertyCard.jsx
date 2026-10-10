@@ -6,6 +6,9 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, MapPin } from "lucide-react";
 
 export default function PropertyCard({ project, index = 0 }) {
+  // Support both project.image and property.coverImage
+  const coverImage = project.coverImage || project.image || null;
+
   return (
     <motion.article
       initial={{ opacity: 0, y: 50 }}
@@ -19,17 +22,24 @@ export default function PropertyCard({ project, index = 0 }) {
     >
       <Link href={`/projects/${project.id}`}>
         <div className="relative h-[500px] overflow-hidden rounded-[32px] bg-[#EDEFF5] md:h-[560px]">
-          {/* Property image */}
-          <Image
-            src={project.image}
-            alt={project.name}
-            fill
-            sizes="(max-width: 768px) 100vw, 50vw"
-            className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
-          />
+          {/* Property image or fallback */}
+          {coverImage ? (
+            <Image
+              src={coverImage}
+              alt={project.title || project.name || "Property"}
+              fill
+              unoptimized
+              sizes="(max-width: 768px) 100vw, 400px"
+              className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+            />
+          ) : (
+            <div className="grid h-full w-full place-items-center bg-slate-100 text-sm text-slate-400">
+              No image available
+            </div>
+          )}
 
-          {/* Gradient */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0D1026]/90 via-[#0D1026]/10 to-transparent" />
+          {/* Gradient overlay */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0D1026]/90 via-[#0D1026]/10 to-transparent" />
 
           {/* Top label */}
           <div className="absolute left-5 top-5">
@@ -46,20 +56,22 @@ export default function PropertyCard({ project, index = 0 }) {
             />
           </div>
 
-          {/* Content */}
+          {/* Property details */}
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
             <div className="flex items-end justify-between gap-5">
-              <div>
+              <div className="min-w-0">
                 <h3 className="font-display text-3xl text-white md:text-4xl">
-                  {project.name}
+                  {project.title || project.name || "Untitled Property"}
                 </h3>
 
                 <div className="mt-3 flex items-center gap-2 text-sm text-white/75">
-                  <MapPin size={15} />
-                  {project.location}
+                  <MapPin size={15} className="shrink-0" />
+                  <span>{project.location || "Location not specified"}</span>
                 </div>
 
-                <p className="mt-2 text-sm text-white/65">{project.type}</p>
+                <p className="mt-2 text-sm text-white/65">
+                  {project.type || "Property"}
+                </p>
               </div>
 
               <div className="hidden shrink-0 text-right sm:block">
@@ -68,7 +80,7 @@ export default function PropertyCard({ project, index = 0 }) {
                 </p>
 
                 <p className="mt-1 text-sm font-semibold text-white">
-                  {project.price}
+                  {project.price || "Price on request"}
                 </p>
               </div>
             </div>
