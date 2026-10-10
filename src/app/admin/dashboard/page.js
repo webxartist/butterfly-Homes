@@ -2,43 +2,1761 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { LayoutDashboard, Building2, FileText, Users, Plus, Search, LogOut, Save, Trash2, Pencil, ExternalLink, RefreshCw, BookOpen, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  Building2,
+  FileText,
+  Users,
+  Plus,
+  Search,
+  LogOut,
+  Save,
+  Trash2,
+  Pencil,
+  ExternalLink,
+  RefreshCw,
+  BookOpen,
+  X,
+} from "lucide-react";
 import PropertyMediaManager from "@/Components/PropertyMediaManager";
 
-const emptyProperty = { title:"", type:"Apartment", purpose:"Sale", status:"Draft", price:"", priceLabel:"", location:"", address:"", city:"", bedrooms:0, bathrooms:0, area:"", areaUnit:"sq.ft", description:"", imagesText:"", amenitiesText:"", highlightsText:"", seoKeywordsText:"", media:[], nearbyText:"", faqsText:"", floorPlansText:"", featured:false, possession:"", reraNumber:"", mapUrl:"", developer:"", seoTitle:"", seoDescription:"" };
-const emptyBlog = { title:"", slug:"", excerpt:"", content:"", coverImage:"/project1.jpg", category:"Property Guide", author:"Butterfly Homes Editorial Team", status:"Draft", seoTitle:"", seoDescription:"", focusKeyword:"", faqText:"" };
-const emptySettings = { siteName:"Butterfly Homes", tagline:"Find a place that feels like home.", heroTitle:"Find a place that feels like home.", heroDescription:"Discover thoughtfully selected homes, premium residences and exceptional spaces.", heroImage:"/hero-home.jpg", phone:"", whatsapp:"", email:"", address:"", instagram:"", facebook:"", footerText:"Helping you find a place to belong.", aboutTitle:"A better way to find your place.", aboutBody:"Butterfly Homes helps people discover homes, investment properties and commercial spaces with clarity and confidence.", seoTitle:"Butterfly Homes | Real Estate", seoDescription:"Discover homes, resale properties, land and commercial real estate with Butterfly Homes.", founderName:"", founderRole:"Founder", founderBio:"", founderImage:"", founderLinkedIn:"", officeHours:"", googleBusinessUrl:"", serviceAreas:"", organizationDescription:"", defaultOgImage:"/hero-home.jpg", canonicalBaseUrl:"", footerNote:"" };
-const tabs = [{id:"overview",label:"Overview",icon:LayoutDashboard},{id:"properties",label:"Properties",icon:Building2},{id:"content",label:"Website & SEO",icon:FileText},{id:"blog",label:"Blog manager",icon:BookOpen},{id:"leads",label:"Enquiries",icon:Users}];
-const inputClass = "mt-1 w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500";
-function Field({label,children}) { return <label className="block text-sm font-medium text-slate-700">{label}{children}</label>; }
+const emptyProperty = {
+  title: "",
+  type: "Apartment",
+  purpose: "Sale",
+  status: "Draft",
+  price: "",
+  priceLabel: "",
+  location: "",
+  address: "",
+  city: "",
+  bedrooms: 0,
+  bathrooms: 0,
+  area: "",
+  areaUnit: "sq.ft",
+  description: "",
+  imagesText: "",
+  amenitiesText: "",
+  highlightsText: "",
+  seoKeywordsText: "",
+  media: [],
+  nearbyText: "",
+  faqsText: "",
+  floorPlansText: "",
+  featured: false,
+  possession: "",
+  reraNumber: "",
+  mapUrl: "",
+  developer: "",
+  seoTitle: "",
+  seoDescription: "",
+};
+const emptyBlog = {
+  title: "",
+  slug: "",
+  excerpt: "",
+  content: "",
+  coverImage: "/project1.jpg",
+  category: "Property Guide",
+  author: "Butterfly Homes Editorial Team",
+  status: "Draft",
+  seoTitle: "",
+  seoDescription: "",
+  focusKeyword: "",
+  faqText: "",
+};
+const emptySettings = {
+  siteName: "Butterfly Homes",
+  tagline: "Find a place that feels like home.",
+  heroTitle: "Find a place that feels like home.",
+  heroDescription:
+    "Discover thoughtfully selected homes, premium residences and exceptional spaces.",
+  heroImage: "/hero-home.jpg",
+  phone: "",
+  whatsapp: "",
+  email: "",
+  address: "",
+  instagram: "",
+  facebook: "",
+  footerText: "Helping you find a place to belong.",
+  aboutTitle: "A better way to find your place.",
+  aboutBody:
+    "Butterfly Homes helps people discover homes, investment properties and commercial spaces with clarity and confidence.",
+  seoTitle: "Butterfly Homes | Real Estate",
+  seoDescription:
+    "Discover homes, resale properties, land and commercial real estate with Butterfly Homes.",
+  founderName: "",
+  founderRole: "Founder",
+  founderBio: "",
+  founderImage: "",
+  founderLinkedIn: "",
+  officeHours: "",
+  googleBusinessUrl: "",
+  serviceAreas: "",
+  organizationDescription: "",
+  defaultOgImage: "/hero-home.jpg",
+  canonicalBaseUrl: "",
+  footerNote: "",
+};
+const tabs = [
+  { id: "overview", label: "Overview", icon: LayoutDashboard },
+  { id: "properties", label: "Properties", icon: Building2 },
+  { id: "content", label: "Website & SEO", icon: FileText },
+  { id: "blog", label: "Blog manager", icon: BookOpen },
+  { id: "leads", label: "Enquiries", icon: Users },
+];
+const inputClass =
+  "mt-1 block w-full min-w-0 max-w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-indigo-500";
+function Field({ label, children }) {
+  return (
+    <label className="block text-sm font-medium text-slate-700">
+      {label}
+      {children}
+    </label>
+  );
+}
 export default function AdminDashboardPage() {
-  const router = useRouter(); const [tab,setTab] = useState("overview"); const [properties,setProperties] = useState([]); const [leads,setLeads] = useState([]); const [settings,setSettings] = useState(emptySettings); const [form,setForm] = useState(emptyProperty); const [blogs,setBlogs] = useState([]); const [blogForm,setBlogForm] = useState(emptyBlog); const [editingBlog,setEditingBlog] = useState(null); const [editing,setEditing] = useState(null); const [search,setSearch] = useState(""); const [notice,setNotice] = useState(""); const [error,setError] = useState(""); const [busy,setBusy] = useState(false); const [ready,setReady] = useState(false);
-  const request = useCallback(async (url, options={}) => { const r=await fetch(url,{...options,headers:{"Content-Type":"application/json",...(options.headers||{})}}); const d=await r.json(); if(r.status===401){router.replace("/admin/login");throw new Error("Please sign in again.");} if(!r.ok)throw new Error(d.error||"Request failed"); return d; },[router]);
-  const load = useCallback(async()=>{setError("");try{const [p,s,l,b]=await Promise.all([request("/api/admin/properties"),request("/api/admin/settings"),request("/api/admin/leads"),request("/api/admin/blog")]);setProperties(p.items||[]);setSettings({...emptySettings,...s.settings});setLeads(l.items||[]);setBlogs(b.items||[]);setReady(true);}catch(e){setError(e.message);}},[request]);
+  const router = useRouter();
+  const [tab, setTab] = useState("overview");
+  const [properties, setProperties] = useState([]);
+  const [leads, setLeads] = useState([]);
+  const [settings, setSettings] = useState(emptySettings);
+  const [form, setForm] = useState(emptyProperty);
+  const [blogs, setBlogs] = useState([]);
+  const [blogForm, setBlogForm] = useState(emptyBlog);
+  const [editingBlog, setEditingBlog] = useState(null);
+  const [editing, setEditing] = useState(null);
+  const [search, setSearch] = useState("");
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [ready, setReady] = useState(false);
+  const request = useCallback(
+    async (url, options = {}) => {
+      const r = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          ...(options.headers || {}),
+        },
+      });
+      const d = await r.json();
+      if (r.status === 401) {
+        router.replace("/admin/login");
+        throw new Error("Please sign in again.");
+      }
+      if (!r.ok) throw new Error(d.error || "Request failed");
+      return d;
+    },
+    [router],
+  );
+  const load = useCallback(async () => {
+    setError("");
+    try {
+      const [p, s, l, b] = await Promise.all([
+        request("/api/admin/properties"),
+        request("/api/admin/settings"),
+        request("/api/admin/leads"),
+        request("/api/admin/blog"),
+      ]);
+      setProperties(p.items || []);
+      setSettings({ ...emptySettings, ...s.settings });
+      setLeads(l.items || []);
+      setBlogs(b.items || []);
+      setReady(true);
+    } catch (e) {
+      setError(e.message);
+    }
+  }, [request]);
   // The effect intentionally loads persisted server data into this CMS view.
   // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(()=>{load();},[load]);
-  const visibleProperties = useMemo(()=>properties.filter(p=>`${p.title} ${p.location} ${p.purpose} ${p.type}`.toLowerCase().includes(search.toLowerCase())),[properties,search]);
-  function editProperty(p){setEditing(p._id);setForm({...emptyProperty,...p,media:p.media||[],imagesText:(p.images||[]).join("\n"),amenitiesText:(p.amenities||[]).join(", "),highlightsText:(p.highlights||[]).join("\n"),seoKeywordsText:(p.seoKeywords||[]).join(", "),nearbyText:(p.nearby||[]).map(x=>`${x.name} | ${x.distance} | ${x.category||""}`).join("\n"),faqsText:(p.faqs||[]).map(x=>`${x.question} | ${x.answer}`).join("\n"),floorPlansText:(p.floorPlans||[]).map(x=>`${x.name} | ${x.area||""} | ${x.image}`).join("\n")});setTab("properties");window.scrollTo({top:0,behavior:"smooth"});}
-  function resetForm(){setEditing(null);setForm(emptyProperty);}
-  async function saveProperty(e){e.preventDefault();setBusy(true);setError("");setNotice("");try{const body={...form,price:Number(form.price)||0,bedrooms:Number(form.bedrooms)||0,bathrooms:Number(form.bathrooms)||0,area:Number(form.area)||0,images:form.imagesText.split("\n").map(s=>s.trim()).filter(Boolean),amenities:form.amenitiesText.split(",").map(s=>s.trim()).filter(Boolean),highlights:form.highlightsText.split("\n").map(s=>s.trim()).filter(Boolean),seoKeywords:form.seoKeywordsText.split(",").map(s=>s.trim()).filter(Boolean),nearby:form.nearbyText.split("\n").map(line=>{const [name,distance,category]=line.split("|");return {name:(name||"").trim(),distance:(distance||"").trim(),category:(category||"").trim()};}).filter(x=>x.name),faqs:form.faqsText.split("\n").map(line=>{const [question,...answer]=line.split("|");return {question:(question||"").trim(),answer:answer.join("|").trim()};}).filter(x=>x.question&&x.answer),floorPlans:form.floorPlansText.split("\n").map(line=>{const [name,area,image]=line.split("|");return {name:(name||"").trim(),area:(area||"").trim(),image:(image||"").trim()};}).filter(x=>x.image)};delete body.imagesText;delete body.amenitiesText;delete body.highlightsText;delete body.seoKeywordsText;delete body.nearbyText;delete body.faqsText;delete body.floorPlansText;const d=await request(editing?`/api/admin/properties/${editing}`:"/api/admin/properties",{method:editing?"PUT":"POST",body:JSON.stringify(body)});setProperties(old=>editing?old.map(p=>p._id===editing?d.item:p):[d.item,...old]);setNotice(editing?"Property updated successfully.":"Property created successfully.");resetForm();}catch(e){setError(e.message);}finally{setBusy(false);}}
-  async function deleteProperty(p){if(!confirm(`Delete “${p.title}”? This cannot be undone.`))return;try{await request(`/api/admin/properties/${p._id}`,{method:"DELETE"});setProperties(old=>old.filter(x=>x._id!==p._id));setNotice("Property deleted.");}catch(e){setError(e.message);}}
-  async function saveSettings(e){e.preventDefault();setBusy(true);setError("");setNotice("");try{const d=await request("/api/admin/settings",{method:"PUT",body:JSON.stringify(settings)});setSettings({...emptySettings,...d.settings});setNotice("Website content and settings saved.");}catch(e){setError(e.message);}finally{setBusy(false);}}
-  function editBlog(post){setEditingBlog(post._id);setBlogForm({...emptyBlog,...post,faqText:(post.faq||[]).map(f=>`${f.question} | ${f.answer}`).join("\n")});setTab("blog");window.scrollTo({top:0,behavior:"smooth"});}
-  function resetBlog(){setEditingBlog(null);setBlogForm(emptyBlog);}
-  async function saveBlog(e){e.preventDefault();setBusy(true);setError("");setNotice("");try{const body={...blogForm,faq:(blogForm.faqText||"").split("\n").map(line=>{const [question,...answer]=line.split("|");return {question:(question||"").trim(),answer:answer.join("|").trim()};}).filter(x=>x.question&&x.answer)};delete body.faqText;const d=await request(editingBlog?`/api/admin/blog/${editingBlog}`:"/api/admin/blog",{method:editingBlog?"PUT":"POST",body:JSON.stringify(body)});setBlogs(old=>editingBlog?old.map(x=>x._id===editingBlog?d.item:x):[d.item,...old]);setNotice(editingBlog?"Blog article updated.":"Blog article created.");resetBlog();}catch(e){setError(e.message);}finally{setBusy(false);}}
-  async function deleteBlog(post){if(!confirm(`Delete “${post.title}”? This cannot be undone.`))return;try{await request(`/api/admin/blog/${post._id}`,{method:"DELETE"});setBlogs(old=>old.filter(x=>x._id!==post._id));setNotice("Blog article deleted.");if(editingBlog===post._id)resetBlog();}catch(e){setError(e.message);}}
-  async function updateLead(id,status){try{const d=await request("/api/admin/leads",{method:"PATCH",body:JSON.stringify({id,status})});setLeads(old=>old.map(x=>x._id===id?d.item:x));setNotice("Enquiry status updated.");}catch(e){setError(e.message);}}
-  async function logout(){await fetch("/api/admin/logout",{method:"POST"});router.replace("/admin/login");}
-  const published=properties.filter(p=>p.status==="Published").length; const newLeads=leads.filter(l=>l.status==="New").length;
-  return <div data-admin-page="true" className="min-h-screen bg-[#f5f7fb] text-slate-900"><aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-[#151a3a] p-5 text-white lg:flex"><Link href="/" className="mb-10 block"><span className="text-xl font-semibold">Butterfly <span className="text-teal-300">Homes</span></span><span className="mt-1 block text-xs text-white/50">Website administration</span></Link><nav className="space-y-2">{tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm ${tab===t.id?"bg-white text-[#151a3a] font-semibold":"text-white/70 hover:bg-white/10 hover:text-white"}`}><t.icon size={18}/>{t.label}</button>)}</nav><div className="mt-auto space-y-3"><Link href="/" target="_blank" className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-white/70 hover:bg-white/10"><ExternalLink size={17}/> View website</Link><button onClick={logout} className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-sm text-white/70 hover:bg-white/10"><LogOut size={17}/> Sign out</button></div></aside>
-  <main className="min-h-screen lg:ml-64"><header className="sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-4 py-4 backdrop-blur md:px-8"><div><p className="text-xs font-semibold uppercase tracking-[.18em] text-indigo-600">Control centre</p><h1 className="mt-1 text-xl font-semibold">{tabs.find(t=>t.id===tab)?.label||"Dashboard"}</h1></div><div className="flex items-center gap-2"><button onClick={load} className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50" title="Refresh"><RefreshCw size={17}/></button><button onClick={logout} className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm lg:hidden">Sign out</button></div><div className="flex w-full gap-2 overflow-x-auto lg:hidden">{tabs.map(t=><button key={t.id} onClick={()=>setTab(t.id)} className={`whitespace-nowrap rounded-full px-3 py-2 text-xs ${tab===t.id?"bg-[#151a3a] text-white":"bg-slate-100 text-slate-600"}`}>{t.label}</button>)}</div></header>
-  <div className="mx-auto max-w-7xl space-y-6 p-4 md:p-8">{notice&&<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">{notice}<button onClick={()=>setNotice("")} className="float-right font-bold">×</button></div>}{error&&<div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}<button onClick={()=>setError("")} className="float-right font-bold">×</button></div>}{!ready&&!error&&<div className="rounded-2xl bg-white p-8 text-slate-500">Loading your website data…</div>}
-  {tab==="overview"&&<><div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">{[{label:"Total properties",value:properties.length},{label:"Published listings",value:published},{label:"Total enquiries",value:leads.length},{label:"New enquiries",value:newLeads}].map(c=><div key={c.label} className="rounded-2xl border border-slate-200 bg-white p-5"><p className="text-sm text-slate-500">{c.label}</p><p className="mt-3 text-3xl font-semibold tracking-tight">{c.value}</p></div>)}</div><div className="grid gap-6 xl:grid-cols-2"><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Recently updated properties</h2><button onClick={()=>setTab("properties")} className="text-sm font-medium text-indigo-700">Manage</button></div>{properties.slice(0,5).map(p=><div key={p._id} className="flex items-center justify-between gap-3 border-t border-slate-100 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{p.title}</p><p className="text-xs text-slate-500">{p.location} · {p.purpose}</p></div><span className={`rounded-full px-2.5 py-1 text-xs ${p.status==="Published"?"bg-emerald-50 text-emerald-700":"bg-slate-100 text-slate-600"}`}>{p.status}</span></div>)}{!properties.length&&<p className="text-sm text-slate-500">No properties yet. Add your first listing.</p>}</section><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-4 flex items-center justify-between"><h2 className="font-semibold">Latest enquiries</h2><button onClick={()=>setTab("leads")} className="text-sm font-medium text-indigo-700">View all</button></div>{leads.slice(0,5).map(l=><div key={l._id} className="flex items-center justify-between gap-3 border-t border-slate-100 py-3"><div className="min-w-0"><p className="truncate text-sm font-medium">{l.name}</p><p className="truncate text-xs text-slate-500">{l.propertyTitle||l.message||l.phone}</p></div><span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs text-amber-700">{l.status}</span></div>)}{!leads.length&&<p className="text-sm text-slate-500">No enquiries yet.</p>}</section></div></>}
-  {tab==="properties"&&<div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,.9fr)]"><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-4 flex flex-wrap items-center justify-between gap-3"><h2 className="font-semibold">Property inventory <span className="text-sm font-normal text-slate-400">({properties.length})</span></h2><div className="relative"><Search size={16} className="absolute left-3 top-3 text-slate-400"/><input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Search listings" className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm sm:w-56"/></div></div><div className="space-y-3">{visibleProperties.map(p=><div key={p._id} className="rounded-xl border border-slate-100 p-4"><div className="flex gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{p.title}</h3><span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">{p.status}</span></div><p className="mt-1 text-xs text-slate-500">{p.location} · {p.type} · {p.purpose}</p><p className="mt-2 text-sm font-semibold">{p.priceLabel|| (p.price?`₹${Number(p.price).toLocaleString("en-IN")}`:"Price on request")}</p></div><div className="flex items-start gap-1"><button onClick={()=>editProperty(p)} title="Edit" className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50"><Pencil size={15}/></button><button onClick={()=>deleteProperty(p)} title="Delete" className="rounded-lg border border-red-100 p-2 text-red-600 hover:bg-red-50"><Trash2 size={15}/></button></div></div></div>)}{!visibleProperties.length&&<p className="py-8 text-center text-sm text-slate-500">No matching listings.</p>}</div></section>
-  <form onSubmit={saveProperty} className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-5 flex items-center justify-between"><div><h2 className="font-semibold">{editing?"Edit property":"Add a property"}</h2><p className="mt-1 text-xs text-slate-500">Manage all details shown on a listing.</p></div>{editing&&<button type="button" onClick={resetForm} className="text-sm text-slate-500">Cancel</button>}</div><div className="grid gap-4 sm:grid-cols-2"><Field label="Property title *"><input required className={inputClass} value={form.title} onChange={e=>setForm({...form,title:e.target.value})}/></Field><Field label="Property category"><select className={inputClass} value={form.type} onChange={e=>setForm({...form,type:e.target.value})}>{["Apartment","Villa","Plot","Land","Office","Shop","Showroom","Warehouse","Industrial","Other"].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Listing purpose"><select className={inputClass} value={form.purpose} onChange={e=>setForm({...form,purpose:e.target.value})}>{["Sale","Rent","Resale","New Project","Commercial","Land"].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Publication status"><select className={inputClass} value={form.status} onChange={e=>setForm({...form,status:e.target.value})}>{["Draft","Published","Sold","Rented","Unavailable"].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Price (INR)"><input type="number" min="0" className={inputClass} value={form.price} onChange={e=>setForm({...form,price:e.target.value})}/></Field><Field label="Price display label"><input placeholder="e.g. ₹85 Lakh onwards" className={inputClass} value={form.priceLabel} onChange={e=>setForm({...form,priceLabel:e.target.value})}/></Field><Field label="Location / locality *"><input required className={inputClass} value={form.location} onChange={e=>setForm({...form,location:e.target.value})}/></Field><Field label="City"><input className={inputClass} value={form.city} onChange={e=>setForm({...form,city:e.target.value})}/></Field><Field label="Area"><input type="number" min="0" className={inputClass} value={form.area} onChange={e=>setForm({...form,area:e.target.value})}/></Field><Field label="Area unit"><select className={inputClass} value={form.areaUnit} onChange={e=>setForm({...form,areaUnit:e.target.value})}>{["sq.ft","sq.m","acre","guntha","hectare"].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Bedrooms"><input type="number" min="0" className={inputClass} value={form.bedrooms} onChange={e=>setForm({...form,bedrooms:e.target.value})}/></Field><Field label="Bathrooms"><input type="number" min="0" className={inputClass} value={form.bathrooms} onChange={e=>setForm({...form,bathrooms:e.target.value})}/></Field><Field label="Possession"><input className={inputClass} value={form.possession} onChange={e=>setForm({...form,possession:e.target.value})}/></Field><Field label="RERA number"><input className={inputClass} value={form.reraNumber} onChange={e=>setForm({...form,reraNumber:e.target.value})}/></Field><div className="sm:col-span-2"><Field label="Full address"><input className={inputClass} value={form.address} onChange={e=>setForm({...form,address:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="Description"><textarea rows={4} className={inputClass} value={form.description} onChange={e=>setForm({...form,description:e.target.value})}/></Field></div><div className="sm:col-span-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4"><p className="mb-3 text-sm font-semibold text-slate-800">Media library</p><PropertyMediaManager value={form.media||[]} onChange={media=>setForm({...form,media})}/><div className="mt-4"><Field label="Legacy image URLs (optional)"><textarea rows={2} placeholder="One URL per line" className={inputClass} value={form.imagesText} onChange={e=>setForm({...form,imagesText:e.target.value})}/></Field></div></div><div className="sm:col-span-2"><Field label="Amenities (comma separated)"><input className={inputClass} value={form.amenitiesText} onChange={e=>setForm({...form,amenitiesText:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="Highlights (one per line)"><textarea rows={3} className={inputClass} value={form.highlightsText} onChange={e=>setForm({...form,highlightsText:e.target.value})}/></Field></div><Field label="Developer / builder"><input className={inputClass} value={form.developer} onChange={e=>setForm({...form,developer:e.target.value})}/></Field><div className="sm:col-span-2"><Field label="Map URL"><input className={inputClass} value={form.mapUrl} onChange={e=>setForm({...form,mapUrl:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="SEO title"><input className={inputClass} value={form.seoTitle} onChange={e=>setForm({...form,seoTitle:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="Nearby places (one per line: Name | Distance | Category)"><textarea rows={3} className={inputClass} value={form.nearbyText} onChange={e=>setForm({...form,nearbyText:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="FAQs (one per line: Question | Answer)"><textarea rows={4} className={inputClass} value={form.faqsText} onChange={e=>setForm({...form,faqsText:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="Floor plans (one per line: Name | Area | Image URL)"><textarea rows={3} className={inputClass} value={form.floorPlansText} onChange={e=>setForm({...form,floorPlansText:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="SEO description"><textarea rows={2} className={inputClass} value={form.seoDescription} onChange={e=>setForm({...form,seoDescription:e.target.value})}/></Field></div><div className="sm:col-span-2"><Field label="SEO keywords (comma separated)"><input className={inputClass} value={form.seoKeywordsText} onChange={e=>setForm({...form,seoKeywordsText:e.target.value})}/></Field></div><label className="flex items-center gap-2 text-sm sm:col-span-2"><input type="checkbox" checked={!!form.featured} onChange={e=>setForm({...form,featured:e.target.checked})}/> Feature this property on the homepage</label></div><button disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#151a3a] px-4 py-3 font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"><Save size={17}/>{busy?"Saving…":editing?"Save property changes":"Create property"}</button></form></div>}
-  {tab==="content"&&<form onSubmit={saveSettings} className="rounded-2xl border border-slate-200 bg-white p-5 md:p-7"><div className="mb-6"><h2 className="text-lg font-semibold">Edit global website content</h2><p className="mt-1 text-sm text-slate-500">These settings are stored in MongoDB. Save after making changes.</p></div><div className="grid gap-5 md:grid-cols-2"><Field label="Website / brand name"><input className={inputClass} value={settings.siteName||""} onChange={e=>setSettings({...settings,siteName:e.target.value})}/></Field><Field label="Tagline"><input className={inputClass} value={settings.tagline||""} onChange={e=>setSettings({...settings,tagline:e.target.value})}/></Field><Field label="Homepage hero heading"><input className={inputClass} value={settings.heroTitle||""} onChange={e=>setSettings({...settings,heroTitle:e.target.value})}/></Field><Field label="Homepage hero image URL"><input className={inputClass} value={settings.heroImage||""} onChange={e=>setSettings({...settings,heroImage:e.target.value})}/></Field><div className="md:col-span-2"><Field label="Homepage hero description"><textarea rows={3} className={inputClass} value={settings.heroDescription||""} onChange={e=>setSettings({...settings,heroDescription:e.target.value})}/></Field></div><Field label="Contact phone"><input className={inputClass} value={settings.phone||""} onChange={e=>setSettings({...settings,phone:e.target.value})}/></Field><Field label="WhatsApp number (with country code)"><input className={inputClass} value={settings.whatsapp||""} onChange={e=>setSettings({...settings,whatsapp:e.target.value})}/></Field><Field label="Contact email"><input type="email" className={inputClass} value={settings.email||""} onChange={e=>setSettings({...settings,email:e.target.value})}/></Field><Field label="Office address"><input className={inputClass} value={settings.address||""} onChange={e=>setSettings({...settings,address:e.target.value})}/></Field><Field label="Instagram URL"><input className={inputClass} value={settings.instagram||""} onChange={e=>setSettings({...settings,instagram:e.target.value})}/></Field><Field label="Facebook URL"><input className={inputClass} value={settings.facebook||""} onChange={e=>setSettings({...settings,facebook:e.target.value})}/></Field><Field label="About page heading"><input className={inputClass} value={settings.aboutTitle||""} onChange={e=>setSettings({...settings,aboutTitle:e.target.value})}/></Field><Field label="SEO title"><input className={inputClass} value={settings.seoTitle||""} onChange={e=>setSettings({...settings,seoTitle:e.target.value})}/></Field><div className="md:col-span-2"><Field label="About page content"><textarea rows={5} className={inputClass} value={settings.aboutBody||""} onChange={e=>setSettings({...settings,aboutBody:e.target.value})}/></Field></div><div className="md:col-span-2"><Field label="Footer text"><textarea rows={2} className={inputClass} value={settings.footerText||""} onChange={e=>setSettings({...settings,footerText:e.target.value})}/></Field></div><div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5"><h3 className="font-semibold text-slate-900">Founder & company profile</h3><p className="mt-1 text-xs text-slate-500">Use real, verifiable details to build trust and demonstrate first-hand expertise.</p></div><Field label="Founder full name"><input className={inputClass} value={settings.founderName||""} onChange={e=>setSettings({...settings,founderName:e.target.value})}/></Field><Field label="Founder title / role"><input className={inputClass} value={settings.founderRole||""} onChange={e=>setSettings({...settings,founderRole:e.target.value})}/></Field><Field label="Founder image URL"><input className={inputClass} value={settings.founderImage||""} onChange={e=>setSettings({...settings,founderImage:e.target.value})}/></Field><Field label="Founder LinkedIn URL"><input className={inputClass} value={settings.founderLinkedIn||""} onChange={e=>setSettings({...settings,founderLinkedIn:e.target.value})}/></Field><div className="md:col-span-2"><Field label="Founder biography"><textarea rows={5} className={inputClass} value={settings.founderBio||""} onChange={e=>setSettings({...settings,founderBio:e.target.value})}/></Field></div><div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5"><h3 className="font-semibold text-slate-900">Local SEO, AEO & GEO</h3><p className="mt-1 text-xs text-slate-500">Keep business information accurate and consistent. These fields support clarity and structured content; rankings or AI citations cannot be guaranteed.</p></div><Field label="Service areas (comma separated)"><input className={inputClass} placeholder="Mumbra, Thane, Navi Mumbai..." value={settings.serviceAreas||""} onChange={e=>setSettings({...settings,serviceAreas:e.target.value})}/></Field><Field label="Google Business Profile URL"><input className={inputClass} value={settings.googleBusinessUrl||""} onChange={e=>setSettings({...settings,googleBusinessUrl:e.target.value})}/></Field><Field label="Office hours"><input className={inputClass} value={settings.officeHours||""} onChange={e=>setSettings({...settings,officeHours:e.target.value})}/></Field><Field label="Canonical base URL"><input className={inputClass} placeholder="https://www.yourdomain.com" value={settings.canonicalBaseUrl||""} onChange={e=>setSettings({...settings,canonicalBaseUrl:e.target.value})}/></Field><div className="md:col-span-2"><Field label="Organization description (factual business summary)"><textarea rows={3} className={inputClass} value={settings.organizationDescription||""} onChange={e=>setSettings({...settings,organizationDescription:e.target.value})}/></Field></div><Field label="Default social sharing image URL"><input className={inputClass} value={settings.defaultOgImage||""} onChange={e=>setSettings({...settings,defaultOgImage:e.target.value})}/></Field><Field label="Footer note / legal note"><input className={inputClass} value={settings.footerNote||""} onChange={e=>setSettings({...settings,footerNote:e.target.value})}/></Field><div className="md:col-span-2"><Field label="Default SEO description"><textarea rows={3} className={inputClass} value={settings.seoDescription||""} onChange={e=>setSettings({...settings,seoDescription:e.target.value})}/></Field></div></div><button disabled={busy} className="mt-6 flex items-center gap-2 rounded-xl bg-[#151a3a] px-5 py-3 font-semibold text-white disabled:opacity-60"><Save size={17}/>{busy?"Saving…":"Save website content"}</button></form>}
-  {tab==="blog"&&<div className="grid items-start gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(340px,.9fr)]"><section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-5"><h2 className="text-lg font-semibold">Blog articles</h2><p className="mt-1 text-sm text-slate-500">Write, edit, preview and publish articles. Drafts stay private; published posts appear on /blog.</p></div><div className="space-y-3">{blogs.map(post=><article key={post._id} className="rounded-xl border border-slate-100 p-4"><div className="flex items-start gap-3"><div className="min-w-0 flex-1"><div className="flex flex-wrap items-center gap-2"><h3 className="font-medium">{post.title}</h3><span className={`rounded-full px-2 py-1 text-xs ${post.status==="Published"?"bg-emerald-50 text-emerald-700":"bg-slate-100 text-slate-600"}`}>{post.status}</span></div><p className="mt-1 text-xs text-slate-500">{post.category} · /blog/{post.slug}</p><p className="mt-2 line-clamp-2 text-sm text-slate-600">{post.excerpt}</p></div><div className="flex gap-1"><button onClick={()=>editBlog(post)} title="Edit article" className="rounded-lg border p-2"><Pencil size={15}/></button><button onClick={()=>deleteBlog(post)} title="Delete article" className="rounded-lg border border-red-100 p-2 text-red-600"><Trash2 size={15}/></button></div></div>{post.status==="Published"&&<Link href={`/blog/${post.slug}`} target="_blank" className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700">View article <ExternalLink size={12}/></Link>}</article>)}{!blogs.length&&<div className="rounded-xl border border-dashed p-8 text-center"><BookOpen className="mx-auto text-slate-400"/><p className="mt-3 font-medium">No articles yet</p><p className="mt-1 text-sm text-slate-500">Use the editor to write your first property guide.</p></div>}</div></section><form onSubmit={saveBlog} className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-5 flex items-center justify-between"><div><h2 className="font-semibold">{editingBlog?"Edit article":"Write a blog article"}</h2><p className="mt-1 text-xs text-slate-500">Use clear headings, original advice and helpful local detail.</p></div>{editingBlog&&<button type="button" onClick={resetBlog} className="text-sm text-slate-500">Cancel</button>}</div><div className="grid gap-4"><Field label="Article title *"><input required className={inputClass} value={blogForm.title} onChange={e=>setBlogForm({...blogForm,title:e.target.value})}/></Field><Field label="URL slug (optional; generated when blank)"><input className={inputClass} placeholder="buying-a-home-in-mumbra" value={blogForm.slug} onChange={e=>setBlogForm({...blogForm,slug:e.target.value})}/></Field><Field label="Short excerpt"><textarea rows={2} className={inputClass} value={blogForm.excerpt} onChange={e=>setBlogForm({...blogForm,excerpt:e.target.value})}/></Field><Field label="Article body * (plain text; separate sections with blank lines)"><textarea required rows={12} className={inputClass} placeholder="Introduction\n\n## What buyers should know\nWrite useful original content..." value={blogForm.content} onChange={e=>setBlogForm({...blogForm,content:e.target.value})}/></Field><Field label="Cover image URL"><input className={inputClass} value={blogForm.coverImage} onChange={e=>setBlogForm({...blogForm,coverImage:e.target.value})}/></Field><div className="grid gap-4 sm:grid-cols-2"><Field label="Category"><select className={inputClass} value={blogForm.category} onChange={e=>setBlogForm({...blogForm,category:e.target.value})}>{["Property Guide","Buying","Selling","Renting","Investment","Market Updates","Legal & RERA","Local Area Guide"].map(x=><option key={x}>{x}</option>)}</select></Field><Field label="Author"><input className={inputClass} value={blogForm.author} onChange={e=>setBlogForm({...blogForm,author:e.target.value})}/></Field></div><Field label="Publication status"><select className={inputClass} value={blogForm.status} onChange={e=>setBlogForm({...blogForm,status:e.target.value})}><option>Draft</option><option>Published</option></select></Field><Field label="Focus keyword"><input className={inputClass} value={blogForm.focusKeyword} onChange={e=>setBlogForm({...blogForm,focusKeyword:e.target.value})}/></Field><Field label="SEO title"><input className={inputClass} value={blogForm.seoTitle} onChange={e=>setBlogForm({...blogForm,seoTitle:e.target.value})}/></Field><Field label="SEO meta description"><textarea rows={3} className={inputClass} value={blogForm.seoDescription} onChange={e=>setBlogForm({...blogForm,seoDescription:e.target.value})}/></Field><Field label="FAQ for readers / answer engines (one per line: Question | Answer)"><textarea rows={4} className={inputClass} placeholder="What is a resale property? | A property previously owned..." value={blogForm.faqText} onChange={e=>setBlogForm({...blogForm,faqText:e.target.value})}/></Field></div><button disabled={busy} className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#151a3a] px-4 py-3 font-semibold text-white disabled:opacity-60"><Save size={17}/>{busy?"Saving…":editingBlog?"Save article":"Save article"}</button></form></div>}
-  {tab==="leads"&&<section className="rounded-2xl border border-slate-200 bg-white p-5"><div className="mb-5 flex flex-wrap items-center justify-between gap-3"><div><h2 className="font-semibold">Property enquiries</h2><p className="mt-1 text-sm text-slate-500">Enquiries submitted through the website are collected here.</p></div><span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm text-indigo-700">{leads.length} total</span></div><div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead><tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400"><th className="py-3 pr-4">Contact</th><th className="py-3 pr-4">Property / message</th><th className="py-3 pr-4">Received</th><th className="py-3">Status</th></tr></thead><tbody>{leads.map(l=><tr key={l._id} className="border-b border-slate-100 align-top"><td className="py-4 pr-4"><p className="font-medium">{l.name}</p><a className="text-indigo-700" href={`tel:${l.phone}`}>{l.phone}</a>{l.email&&<p className="text-xs text-slate-500">{l.email}</p>}</td><td className="max-w-xs py-4 pr-4"><p className="font-medium">{l.propertyTitle||"General enquiry"}</p><p className="mt-1 whitespace-pre-wrap text-xs text-slate-500">{l.message}</p></td><td className="py-4 pr-4 text-slate-500">{new Date(l.createdAt).toLocaleDateString()}</td><td className="py-4"><select aria-label={`Status for ${l.name}`} value={l.status} onChange={e=>updateLead(l._id,e.target.value)} className="rounded-lg border border-slate-200 px-2 py-2 text-xs">{["New","Contacted","Qualified","Closed","Spam"].map(s=><option key={s}>{s}</option>)}</select></td></tr>)}</tbody></table>{!leads.length&&<p className="py-10 text-center text-sm text-slate-500">No enquiries received yet.</p>}</div></section>}
-  <p className="pb-5 text-xs text-slate-400">Butterfly Homes CMS · Keep admin credentials private · <Link className="underline" href="/" target="_blank">Open public website</Link></p></div></main></div>;
+  useEffect(() => {
+    load();
+  }, [load]);
+  const visibleProperties = useMemo(
+    () =>
+      properties.filter((p) =>
+        `${p.title} ${p.location} ${p.purpose} ${p.type}`
+          .toLowerCase()
+          .includes(search.toLowerCase()),
+      ),
+    [properties, search],
+  );
+  function editProperty(p) {
+    setEditing(p._id);
+    setForm({
+      ...emptyProperty,
+      ...p,
+      media: p.media || [],
+      imagesText: (p.images || []).join("\n"),
+      amenitiesText: (p.amenities || []).join(", "),
+      highlightsText: (p.highlights || []).join("\n"),
+      seoKeywordsText: (p.seoKeywords || []).join(", "),
+      nearbyText: (p.nearby || [])
+        .map((x) => `${x.name} | ${x.distance} | ${x.category || ""}`)
+        .join("\n"),
+      faqsText: (p.faqs || [])
+        .map((x) => `${x.question} | ${x.answer}`)
+        .join("\n"),
+      floorPlansText: (p.floorPlans || [])
+        .map((x) => `${x.name} | ${x.area || ""} | ${x.image}`)
+        .join("\n"),
+    });
+    setTab("properties");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function resetForm() {
+    setEditing(null);
+    setForm(emptyProperty);
+  }
+  async function saveProperty(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const body = {
+        ...form,
+        price: Number(form.price) || 0,
+        bedrooms: Number(form.bedrooms) || 0,
+        bathrooms: Number(form.bathrooms) || 0,
+        area: Number(form.area) || 0,
+        images: form.imagesText
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        amenities: form.amenitiesText
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        highlights: form.highlightsText
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        seoKeywords: form.seoKeywordsText
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        nearby: form.nearbyText
+          .split("\n")
+          .map((line) => {
+            const [name, distance, category] = line.split("|");
+            return {
+              name: (name || "").trim(),
+              distance: (distance || "").trim(),
+              category: (category || "").trim(),
+            };
+          })
+          .filter((x) => x.name),
+        faqs: form.faqsText
+          .split("\n")
+          .map((line) => {
+            const [question, ...answer] = line.split("|");
+            return {
+              question: (question || "").trim(),
+              answer: answer.join("|").trim(),
+            };
+          })
+          .filter((x) => x.question && x.answer),
+        floorPlans: form.floorPlansText
+          .split("\n")
+          .map((line) => {
+            const [name, area, image] = line.split("|");
+            return {
+              name: (name || "").trim(),
+              area: (area || "").trim(),
+              image: (image || "").trim(),
+            };
+          })
+          .filter((x) => x.image),
+      };
+      delete body.imagesText;
+      delete body.amenitiesText;
+      delete body.highlightsText;
+      delete body.seoKeywordsText;
+      delete body.nearbyText;
+      delete body.faqsText;
+      delete body.floorPlansText;
+      const d = await request(
+        editing ? `/api/admin/properties/${editing}` : "/api/admin/properties",
+        { method: editing ? "PUT" : "POST", body: JSON.stringify(body) },
+      );
+      setProperties((old) =>
+        editing
+          ? old.map((p) => (p._id === editing ? d.item : p))
+          : [d.item, ...old],
+      );
+      setNotice(
+        editing
+          ? "Property updated successfully."
+          : "Property created successfully.",
+      );
+      resetForm();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function deleteProperty(p) {
+    if (!confirm(`Delete “${p.title}”? This cannot be undone.`)) return;
+    try {
+      await request(`/api/admin/properties/${p._id}`, { method: "DELETE" });
+      setProperties((old) => old.filter((x) => x._id !== p._id));
+      setNotice("Property deleted.");
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function saveSettings(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const d = await request("/api/admin/settings", {
+        method: "PUT",
+        body: JSON.stringify(settings),
+      });
+      setSettings({ ...emptySettings, ...d.settings });
+      setNotice("Website content and settings saved.");
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  function editBlog(post) {
+    setEditingBlog(post._id);
+    setBlogForm({
+      ...emptyBlog,
+      ...post,
+      faqText: (post.faq || [])
+        .map((f) => `${f.question} | ${f.answer}`)
+        .join("\n"),
+    });
+    setTab("blog");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+  function resetBlog() {
+    setEditingBlog(null);
+    setBlogForm(emptyBlog);
+  }
+  async function saveBlog(e) {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const body = {
+        ...blogForm,
+        faq: (blogForm.faqText || "")
+          .split("\n")
+          .map((line) => {
+            const [question, ...answer] = line.split("|");
+            return {
+              question: (question || "").trim(),
+              answer: answer.join("|").trim(),
+            };
+          })
+          .filter((x) => x.question && x.answer),
+      };
+      delete body.faqText;
+      const d = await request(
+        editingBlog ? `/api/admin/blog/${editingBlog}` : "/api/admin/blog",
+        { method: editingBlog ? "PUT" : "POST", body: JSON.stringify(body) },
+      );
+      setBlogs((old) =>
+        editingBlog
+          ? old.map((x) => (x._id === editingBlog ? d.item : x))
+          : [d.item, ...old],
+      );
+      setNotice(
+        editingBlog ? "Blog article updated." : "Blog article created.",
+      );
+      resetBlog();
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+  async function deleteBlog(post) {
+    if (!confirm(`Delete “${post.title}”? This cannot be undone.`)) return;
+    try {
+      await request(`/api/admin/blog/${post._id}`, { method: "DELETE" });
+      setBlogs((old) => old.filter((x) => x._id !== post._id));
+      setNotice("Blog article deleted.");
+      if (editingBlog === post._id) resetBlog();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function updateLead(id, status) {
+    try {
+      const d = await request("/api/admin/leads", {
+        method: "PATCH",
+        body: JSON.stringify({ id, status }),
+      });
+      setLeads((old) => old.map((x) => (x._id === id ? d.item : x)));
+      setNotice("Enquiry status updated.");
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+  async function logout() {
+    await fetch("/api/admin/logout", { method: "POST" });
+    router.replace("/admin/login");
+  }
+  const published = properties.filter((p) => p.status === "Published").length;
+  const newLeads = leads.filter((l) => l.status === "New").length;
+  return (
+    <div
+      data-admin-page="true"
+      className="min-h-screen w-full min-w-0 overflow-x-clip bg-[#f5f7fb] text-slate-900 [overflow-wrap:anywhere] [&_input]:max-w-full [&_input]:min-w-0 [&_select]:max-w-full [&_select]:min-w-0 [&_textarea]:max-w-full [&_textarea]:min-w-0"
+    >
+      <aside className="fixed inset-y-0 left-0 z-20 hidden w-64 flex-col bg-[#151a3a] p-5 text-white lg:flex">
+        <Link href="/" className="mb-10 block">
+          <span className="text-xl font-semibold">
+            Butterfly <span className="text-teal-300">Homes</span>
+          </span>
+          <span className="mt-1 block text-xs text-white/50">
+            Website administration
+          </span>
+        </Link>
+        <nav className="space-y-2">
+          {tabs.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm ${tab === t.id ? "bg-white text-[#151a3a] font-semibold" : "text-white/70 hover:bg-white/10 hover:text-white"}`}
+            >
+              <t.icon size={18} />
+              {t.label}
+            </button>
+          ))}
+        </nav>
+        <div className="mt-auto space-y-3">
+          <Link
+            href="/"
+            target="_blank"
+            className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm text-white/70 hover:bg-white/10"
+          >
+            <ExternalLink size={17} /> View website
+          </Link>
+          <button
+            onClick={logout}
+            className="flex w-full items-center gap-2 rounded-xl px-4 py-3 text-sm text-white/70 hover:bg-white/10"
+          >
+            <LogOut size={17} /> Sign out
+          </button>
+        </div>
+      </aside>
+      <main className="min-h-screen w-full min-w-0 lg:ml-64 lg:w-[calc(100%-16rem)]">
+        <header className="sticky top-0 z-10 flex min-w-0 flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-white/90 px-3 py-3 backdrop-blur sm:px-4 sm:py-4 md:px-8">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[.18em] text-indigo-600">
+              Control centre
+            </p>
+            <h1 className="mt-1 text-xl font-semibold">
+              {tabs.find((t) => t.id === tab)?.label || "Dashboard"}
+            </h1>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={load}
+              className="rounded-xl border border-slate-200 p-2.5 text-slate-600 hover:bg-slate-50"
+              title="Refresh"
+            >
+              <RefreshCw size={17} />
+            </button>
+            <button
+              onClick={logout}
+              className="rounded-xl border border-slate-200 px-3 py-2.5 text-sm lg:hidden"
+            >
+              Sign out
+            </button>
+          </div>
+          <div className="flex w-full gap-2 overflow-x-auto lg:hidden">
+            {tabs.map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={`whitespace-nowrap rounded-full px-3 py-2 text-xs ${tab === t.id ? "bg-[#151a3a] text-white" : "bg-slate-100 text-slate-600"}`}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+        </header>
+        <div className="mx-auto w-full min-w-0 max-w-7xl space-y-5 p-3 sm:space-y-6 sm:p-4 md:p-8">
+          {notice && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+              {notice}
+              <button
+                onClick={() => setNotice("")}
+                className="float-right font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+              <button
+                onClick={() => setError("")}
+                className="float-right font-bold"
+              >
+                ×
+              </button>
+            </div>
+          )}
+          {!ready && !error && (
+            <div className="rounded-2xl bg-white p-8 text-slate-500">
+              Loading your website data…
+            </div>
+          )}
+          {tab === "overview" && (
+            <>
+              <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  { label: "Total properties", value: properties.length },
+                  { label: "Published listings", value: published },
+                  { label: "Total enquiries", value: leads.length },
+                  { label: "New enquiries", value: newLeads },
+                ].map((c) => (
+                  <div
+                    key={c.label}
+                    className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5"
+                  >
+                    <p className="text-sm text-slate-500">{c.label}</p>
+                    <p className="mt-3 text-3xl font-semibold tracking-tight">
+                      {c.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div className="grid min-w-0 grid-cols-1 gap-4 sm:gap-6 xl:grid-cols-2">
+                <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold">
+                      Recently updated properties
+                    </h2>
+                    <button
+                      onClick={() => setTab("properties")}
+                      className="text-sm font-medium text-indigo-700"
+                    >
+                      Manage
+                    </button>
+                  </div>
+                  {properties.slice(0, 5).map((p) => (
+                    <div
+                      key={p._id}
+                      className="flex items-center justify-between gap-3 border-t border-slate-100 py-3"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">
+                          {p.title}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {p.location} · {p.purpose}
+                        </p>
+                      </div>
+                      <span
+                        className={`rounded-full px-2.5 py-1 text-xs ${p.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                      >
+                        {p.status}
+                      </span>
+                    </div>
+                  ))}
+                  {!properties.length && (
+                    <p className="text-sm text-slate-500">
+                      No properties yet. Add your first listing.
+                    </p>
+                  )}
+                </section>
+                <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="font-semibold">Latest enquiries</h2>
+                    <button
+                      onClick={() => setTab("leads")}
+                      className="text-sm font-medium text-indigo-700"
+                    >
+                      View all
+                    </button>
+                  </div>
+                  {leads.slice(0, 5).map((l) => (
+                    <div
+                      key={l._id}
+                      className="flex min-w-0 items-start justify-between gap-3 border-t border-slate-100 py-3 sm:items-center"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-medium">{l.name}</p>
+                        <p className="truncate text-xs text-slate-500">
+                          {l.propertyTitle || l.message || l.phone}
+                        </p>
+                      </div>
+                      <span
+                        className={`inline-flex w-fit max-w-full shrink-0 items-center justify-center whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-medium leading-5 ${
+                          String(l.status).toLowerCase() === "spam"
+                            ? "bg-rose-50 text-rose-700"
+                            : String(l.status).toLowerCase() === "new"
+                              ? "bg-amber-50 text-amber-700"
+                              : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {l.status}
+                      </span>
+                    </div>
+                  ))}
+                  {!leads.length && (
+                    <p className="text-sm text-slate-500">No enquiries yet.</p>
+                  )}
+                </section>
+              </div>
+            </>
+          )}
+          {tab === "properties" && (
+            <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(0,.9fr)]">
+              <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+                <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <h2 className="font-semibold">
+                    Property inventory{" "}
+                    <span className="text-sm font-normal text-slate-400">
+                      ({properties.length})
+                    </span>
+                  </h2>
+                  <div className="relative w-full min-w-0 sm:w-auto">
+                    <Search
+                      size={16}
+                      className="absolute left-3 top-3 text-slate-400"
+                    />
+                    <input
+                      value={search}
+                      onChange={(e) => setSearch(e.target.value)}
+                      placeholder="Search listings"
+                      className="w-full rounded-xl border border-slate-200 py-2.5 pl-9 pr-3 text-sm sm:w-56"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  {visibleProperties.map((p) => (
+                    <div
+                      key={p._id}
+                      className="rounded-xl border border-slate-100 p-4"
+                    >
+                      <div className="flex min-w-0 flex-wrap gap-3 sm:flex-nowrap">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-medium">{p.title}</h3>
+                            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                              {p.status}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {p.location} · {p.type} · {p.purpose}
+                          </p>
+                          <p className="mt-2 text-sm font-semibold">
+                            {p.priceLabel ||
+                              (p.price
+                                ? `₹${Number(p.price).toLocaleString("en-IN")}`
+                                : "Price on request")}
+                          </p>
+                        </div>
+                        <div className="flex items-start gap-1">
+                          <button
+                            onClick={() => editProperty(p)}
+                            title="Edit"
+                            className="rounded-lg border border-slate-200 p-2 hover:bg-slate-50"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => deleteProperty(p)}
+                            title="Delete"
+                            className="rounded-lg border border-red-100 p-2 text-red-600 hover:bg-red-50"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  {!visibleProperties.length && (
+                    <p className="py-8 text-center text-sm text-slate-500">
+                      No matching listings.
+                    </p>
+                  )}
+                </div>
+              </section>
+              <form
+                onSubmit={saveProperty}
+                className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5"
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold">
+                      {editing ? "Edit property" : "Add a property"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Manage all details shown on a listing.
+                    </p>
+                  </div>
+                  {editing && (
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="text-sm text-slate-500"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Field label="Property title *">
+                    <input
+                      required
+                      className={inputClass}
+                      value={form.title}
+                      onChange={(e) =>
+                        setForm({ ...form, title: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Property category">
+                    <select
+                      className={inputClass}
+                      value={form.type}
+                      onChange={(e) =>
+                        setForm({ ...form, type: e.target.value })
+                      }
+                    >
+                      {[
+                        "Apartment",
+                        "Villa",
+                        "Plot",
+                        "Land",
+                        "Office",
+                        "Shop",
+                        "Showroom",
+                        "Warehouse",
+                        "Industrial",
+                        "Other",
+                      ].map((x) => (
+                        <option key={x}>{x}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Listing purpose">
+                    <select
+                      className={inputClass}
+                      value={form.purpose}
+                      onChange={(e) =>
+                        setForm({ ...form, purpose: e.target.value })
+                      }
+                    >
+                      {[
+                        "Sale",
+                        "Rent",
+                        "Resale",
+                        "New Project",
+                        "Commercial",
+                        "Land",
+                      ].map((x) => (
+                        <option key={x}>{x}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Publication status">
+                    <select
+                      className={inputClass}
+                      value={form.status}
+                      onChange={(e) =>
+                        setForm({ ...form, status: e.target.value })
+                      }
+                    >
+                      {[
+                        "Draft",
+                        "Published",
+                        "Sold",
+                        "Rented",
+                        "Unavailable",
+                      ].map((x) => (
+                        <option key={x}>{x}</option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Price (INR)">
+                    <input
+                      type="number"
+                      min="0"
+                      className={inputClass}
+                      value={form.price}
+                      onChange={(e) =>
+                        setForm({ ...form, price: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Price display label">
+                    <input
+                      placeholder="e.g. ₹85 Lakh onwards"
+                      className={inputClass}
+                      value={form.priceLabel}
+                      onChange={(e) =>
+                        setForm({ ...form, priceLabel: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Location / locality *">
+                    <input
+                      required
+                      className={inputClass}
+                      value={form.location}
+                      onChange={(e) =>
+                        setForm({ ...form, location: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="City">
+                    <input
+                      className={inputClass}
+                      value={form.city}
+                      onChange={(e) =>
+                        setForm({ ...form, city: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Area">
+                    <input
+                      type="number"
+                      min="0"
+                      className={inputClass}
+                      value={form.area}
+                      onChange={(e) =>
+                        setForm({ ...form, area: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Area unit">
+                    <select
+                      className={inputClass}
+                      value={form.areaUnit}
+                      onChange={(e) =>
+                        setForm({ ...form, areaUnit: e.target.value })
+                      }
+                    >
+                      {["sq.ft", "sq.m", "acre", "guntha", "hectare"].map(
+                        (x) => (
+                          <option key={x}>{x}</option>
+                        ),
+                      )}
+                    </select>
+                  </Field>
+                  <Field label="Bedrooms">
+                    <input
+                      type="number"
+                      min="0"
+                      className={inputClass}
+                      value={form.bedrooms}
+                      onChange={(e) =>
+                        setForm({ ...form, bedrooms: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Bathrooms">
+                    <input
+                      type="number"
+                      min="0"
+                      className={inputClass}
+                      value={form.bathrooms}
+                      onChange={(e) =>
+                        setForm({ ...form, bathrooms: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Possession">
+                    <input
+                      className={inputClass}
+                      value={form.possession}
+                      onChange={(e) =>
+                        setForm({ ...form, possession: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="RERA number">
+                    <input
+                      className={inputClass}
+                      value={form.reraNumber}
+                      onChange={(e) =>
+                        setForm({ ...form, reraNumber: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="Full address">
+                      <input
+                        className={inputClass}
+                        value={form.address}
+                        onChange={(e) =>
+                          setForm({ ...form, address: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Description">
+                      <textarea
+                        rows={4}
+                        className={inputClass}
+                        value={form.description}
+                        onChange={(e) =>
+                          setForm({ ...form, description: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2 rounded-2xl border border-indigo-100 bg-indigo-50/40 p-4">
+                    <p className="mb-3 text-sm font-semibold text-slate-800">
+                      Media library
+                    </p>
+                    <PropertyMediaManager
+                      value={form.media || []}
+                      onChange={(media) => setForm({ ...form, media })}
+                    />
+                    <div className="mt-4">
+                      <Field label="Legacy image URLs (optional)">
+                        <textarea
+                          rows={2}
+                          placeholder="One URL per line"
+                          className={inputClass}
+                          value={form.imagesText}
+                          onChange={(e) =>
+                            setForm({ ...form, imagesText: e.target.value })
+                          }
+                        />
+                      </Field>
+                    </div>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Amenities (comma separated)">
+                      <input
+                        className={inputClass}
+                        value={form.amenitiesText}
+                        onChange={(e) =>
+                          setForm({ ...form, amenitiesText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Highlights (one per line)">
+                      <textarea
+                        rows={3}
+                        className={inputClass}
+                        value={form.highlightsText}
+                        onChange={(e) =>
+                          setForm({ ...form, highlightsText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Developer / builder">
+                    <input
+                      className={inputClass}
+                      value={form.developer}
+                      onChange={(e) =>
+                        setForm({ ...form, developer: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <div className="sm:col-span-2">
+                    <Field label="Map URL">
+                      <input
+                        className={inputClass}
+                        value={form.mapUrl}
+                        onChange={(e) =>
+                          setForm({ ...form, mapUrl: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="SEO title">
+                      <input
+                        className={inputClass}
+                        value={form.seoTitle}
+                        onChange={(e) =>
+                          setForm({ ...form, seoTitle: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Nearby places (one per line: Name | Distance | Category)">
+                      <textarea
+                        rows={3}
+                        className={inputClass}
+                        value={form.nearbyText}
+                        onChange={(e) =>
+                          setForm({ ...form, nearbyText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="FAQs (one per line: Question | Answer)">
+                      <textarea
+                        rows={4}
+                        className={inputClass}
+                        value={form.faqsText}
+                        onChange={(e) =>
+                          setForm({ ...form, faqsText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="Floor plans (one per line: Name | Area | Image URL)">
+                      <textarea
+                        rows={3}
+                        className={inputClass}
+                        value={form.floorPlansText}
+                        onChange={(e) =>
+                          setForm({ ...form, floorPlansText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="SEO description">
+                      <textarea
+                        rows={2}
+                        className={inputClass}
+                        value={form.seoDescription}
+                        onChange={(e) =>
+                          setForm({ ...form, seoDescription: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <div className="sm:col-span-2">
+                    <Field label="SEO keywords (comma separated)">
+                      <input
+                        className={inputClass}
+                        value={form.seoKeywordsText}
+                        onChange={(e) =>
+                          setForm({ ...form, seoKeywordsText: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <label className="flex items-center gap-2 text-sm sm:col-span-2">
+                    <input
+                      type="checkbox"
+                      checked={!!form.featured}
+                      onChange={(e) =>
+                        setForm({ ...form, featured: e.target.checked })
+                      }
+                    />{" "}
+                    Feature this property on the homepage
+                  </label>
+                </div>
+                <button
+                  disabled={busy}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#151a3a] px-4 py-3 font-semibold text-white hover:bg-indigo-800 disabled:opacity-60"
+                >
+                  <Save size={17} />
+                  {busy
+                    ? "Saving…"
+                    : editing
+                      ? "Save property changes"
+                      : "Create property"}
+                </button>
+              </form>
+            </div>
+          )}
+          {tab === "content" && (
+            <form
+              onSubmit={saveSettings}
+              className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5 md:p-7"
+            >
+              <div className="mb-6">
+                <h2 className="text-lg font-semibold">
+                  Edit global website content
+                </h2>
+                <p className="mt-1 text-sm text-slate-500">
+                  These settings are stored in MongoDB. Save after making
+                  changes.
+                </p>
+              </div>
+              <div className="grid min-w-0 grid-cols-1 gap-5 md:grid-cols-2">
+                <Field label="Website / brand name">
+                  <input
+                    className={inputClass}
+                    value={settings.siteName || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, siteName: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Tagline">
+                  <input
+                    className={inputClass}
+                    value={settings.tagline || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, tagline: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Homepage hero heading">
+                  <input
+                    className={inputClass}
+                    value={settings.heroTitle || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, heroTitle: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Homepage hero image URL">
+                  <input
+                    className={inputClass}
+                    value={settings.heroImage || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, heroImage: e.target.value })
+                    }
+                  />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="Homepage hero description">
+                    <textarea
+                      rows={3}
+                      className={inputClass}
+                      value={settings.heroDescription || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          heroDescription: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+                <Field label="Contact phone">
+                  <input
+                    className={inputClass}
+                    value={settings.phone || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, phone: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="WhatsApp number (with country code)">
+                  <input
+                    className={inputClass}
+                    value={settings.whatsapp || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, whatsapp: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Contact email">
+                  <input
+                    type="email"
+                    className={inputClass}
+                    value={settings.email || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, email: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Office address">
+                  <input
+                    className={inputClass}
+                    value={settings.address || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, address: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Instagram URL">
+                  <input
+                    className={inputClass}
+                    value={settings.instagram || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, instagram: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Facebook URL">
+                  <input
+                    className={inputClass}
+                    value={settings.facebook || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, facebook: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="About page heading">
+                  <input
+                    className={inputClass}
+                    value={settings.aboutTitle || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, aboutTitle: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="SEO title">
+                  <input
+                    className={inputClass}
+                    value={settings.seoTitle || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, seoTitle: e.target.value })
+                    }
+                  />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="About page content">
+                    <textarea
+                      rows={5}
+                      className={inputClass}
+                      value={settings.aboutBody || ""}
+                      onChange={(e) =>
+                        setSettings({ ...settings, aboutBody: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="md:col-span-2">
+                  <Field label="Footer text">
+                    <textarea
+                      rows={2}
+                      className={inputClass}
+                      value={settings.footerText || ""}
+                      onChange={(e) =>
+                        setSettings({ ...settings, footerText: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
+                  <h3 className="font-semibold text-slate-900">
+                    Founder & company profile
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Use real, verifiable details to build trust and demonstrate
+                    first-hand expertise.
+                  </p>
+                </div>
+                <Field label="Founder full name">
+                  <input
+                    className={inputClass}
+                    value={settings.founderName || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, founderName: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Founder title / role">
+                  <input
+                    className={inputClass}
+                    value={settings.founderRole || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, founderRole: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Founder image URL">
+                  <input
+                    className={inputClass}
+                    value={settings.founderImage || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, founderImage: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Founder LinkedIn URL">
+                  <input
+                    className={inputClass}
+                    value={settings.founderLinkedIn || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        founderLinkedIn: e.target.value,
+                      })
+                    }
+                  />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="Founder biography">
+                    <textarea
+                      rows={5}
+                      className={inputClass}
+                      value={settings.founderBio || ""}
+                      onChange={(e) =>
+                        setSettings({ ...settings, founderBio: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <div className="md:col-span-2 mt-2 border-t border-slate-200 pt-5">
+                  <h3 className="font-semibold text-slate-900">
+                    Local SEO, AEO & GEO
+                  </h3>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Keep business information accurate and consistent. These
+                    fields support clarity and structured content; rankings or
+                    AI citations cannot be guaranteed.
+                  </p>
+                </div>
+                <Field label="Service areas (comma separated)">
+                  <input
+                    className={inputClass}
+                    placeholder="Mumbra, Thane, Navi Mumbai..."
+                    value={settings.serviceAreas || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, serviceAreas: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Google Business Profile URL">
+                  <input
+                    className={inputClass}
+                    value={settings.googleBusinessUrl || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        googleBusinessUrl: e.target.value,
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Office hours">
+                  <input
+                    className={inputClass}
+                    value={settings.officeHours || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, officeHours: e.target.value })
+                    }
+                  />
+                </Field>
+                <Field label="Canonical base URL">
+                  <input
+                    className={inputClass}
+                    placeholder="https://www.yourdomain.com"
+                    value={settings.canonicalBaseUrl || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        canonicalBaseUrl: e.target.value,
+                      })
+                    }
+                  />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="Organization description (factual business summary)">
+                    <textarea
+                      rows={3}
+                      className={inputClass}
+                      value={settings.organizationDescription || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          organizationDescription: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+                <Field label="Default social sharing image URL">
+                  <input
+                    className={inputClass}
+                    value={settings.defaultOgImage || ""}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        defaultOgImage: e.target.value,
+                      })
+                    }
+                  />
+                </Field>
+                <Field label="Footer note / legal note">
+                  <input
+                    className={inputClass}
+                    value={settings.footerNote || ""}
+                    onChange={(e) =>
+                      setSettings({ ...settings, footerNote: e.target.value })
+                    }
+                  />
+                </Field>
+                <div className="md:col-span-2">
+                  <Field label="Default SEO description">
+                    <textarea
+                      rows={3}
+                      className={inputClass}
+                      value={settings.seoDescription || ""}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          seoDescription: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                </div>
+              </div>
+              <button
+                disabled={busy}
+                className="mt-6 flex items-center gap-2 rounded-xl bg-[#151a3a] px-5 py-3 font-semibold text-white disabled:opacity-60"
+              >
+                <Save size={17} />
+                {busy ? "Saving…" : "Save website content"}
+              </button>
+            </form>
+          )}
+          {tab === "blog" && (
+            <div className="grid min-w-0 grid-cols-1 items-start gap-4 sm:gap-6 2xl:grid-cols-[minmax(0,1fr)_minmax(0,.9fr)]">
+              <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+                <div className="mb-5">
+                  <h2 className="text-lg font-semibold">Blog articles</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Write, edit, preview and publish articles. Drafts stay
+                    private; published posts appear on /blog.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {blogs.map((post) => (
+                    <article
+                      key={post._id}
+                      className="rounded-xl border border-slate-100 p-4"
+                    >
+                      <div className="flex min-w-0 items-start gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="font-medium">{post.title}</h3>
+                            <span
+                              className={`rounded-full px-2 py-1 text-xs ${post.status === "Published" ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-600"}`}
+                            >
+                              {post.status}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-slate-500">
+                            {post.category} · /blog/{post.slug}
+                          </p>
+                          <p className="mt-2 line-clamp-2 text-sm text-slate-600">
+                            {post.excerpt}
+                          </p>
+                        </div>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => editBlog(post)}
+                            title="Edit article"
+                            className="rounded-lg border p-2"
+                          >
+                            <Pencil size={15} />
+                          </button>
+                          <button
+                            onClick={() => deleteBlog(post)}
+                            title="Delete article"
+                            className="rounded-lg border border-red-100 p-2 text-red-600"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </div>
+                      {post.status === "Published" && (
+                        <Link
+                          href={`/blog/${post.slug}`}
+                          target="_blank"
+                          className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-indigo-700"
+                        >
+                          View article <ExternalLink size={12} />
+                        </Link>
+                      )}
+                    </article>
+                  ))}
+                  {!blogs.length && (
+                    <div className="rounded-xl border border-dashed p-8 text-center">
+                      <BookOpen className="mx-auto text-slate-400" />
+                      <p className="mt-3 font-medium">No articles yet</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        Use the editor to write your first property guide.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </section>
+              <form
+                onSubmit={saveBlog}
+                className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5"
+              >
+                <div className="mb-5 flex items-center justify-between">
+                  <div>
+                    <h2 className="font-semibold">
+                      {editingBlog ? "Edit article" : "Write a blog article"}
+                    </h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Use clear headings, original advice and helpful local
+                      detail.
+                    </p>
+                  </div>
+                  {editingBlog && (
+                    <button
+                      type="button"
+                      onClick={resetBlog}
+                      className="text-sm text-slate-500"
+                    >
+                      Cancel
+                    </button>
+                  )}
+                </div>
+                <div className="grid min-w-0 grid-cols-1 gap-4">
+                  <Field label="Article title *">
+                    <input
+                      required
+                      className={inputClass}
+                      value={blogForm.title}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, title: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="URL slug (optional; generated when blank)">
+                    <input
+                      className={inputClass}
+                      placeholder="buying-a-home-in-mumbra"
+                      value={blogForm.slug}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, slug: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Short excerpt">
+                    <textarea
+                      rows={2}
+                      className={inputClass}
+                      value={blogForm.excerpt}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, excerpt: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Article body * (plain text; separate sections with blank lines)">
+                    <textarea
+                      required
+                      rows={12}
+                      className={inputClass}
+                      placeholder="Introduction\n\n## What buyers should know\nWrite useful original content..."
+                      value={blogForm.content}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, content: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="Cover image URL">
+                    <input
+                      className={inputClass}
+                      value={blogForm.coverImage}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, coverImage: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <div className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
+                    <Field label="Category">
+                      <select
+                        className={inputClass}
+                        value={blogForm.category}
+                        onChange={(e) =>
+                          setBlogForm({ ...blogForm, category: e.target.value })
+                        }
+                      >
+                        {[
+                          "Property Guide",
+                          "Buying",
+                          "Selling",
+                          "Renting",
+                          "Investment",
+                          "Market Updates",
+                          "Legal & RERA",
+                          "Local Area Guide",
+                        ].map((x) => (
+                          <option key={x}>{x}</option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Author">
+                      <input
+                        className={inputClass}
+                        value={blogForm.author}
+                        onChange={(e) =>
+                          setBlogForm({ ...blogForm, author: e.target.value })
+                        }
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Publication status">
+                    <select
+                      className={inputClass}
+                      value={blogForm.status}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, status: e.target.value })
+                      }
+                    >
+                      <option>Draft</option>
+                      <option>Published</option>
+                    </select>
+                  </Field>
+                  <Field label="Focus keyword">
+                    <input
+                      className={inputClass}
+                      value={blogForm.focusKeyword}
+                      onChange={(e) =>
+                        setBlogForm({
+                          ...blogForm,
+                          focusKeyword: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label="SEO title">
+                    <input
+                      className={inputClass}
+                      value={blogForm.seoTitle}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, seoTitle: e.target.value })
+                      }
+                    />
+                  </Field>
+                  <Field label="SEO meta description">
+                    <textarea
+                      rows={3}
+                      className={inputClass}
+                      value={blogForm.seoDescription}
+                      onChange={(e) =>
+                        setBlogForm({
+                          ...blogForm,
+                          seoDescription: e.target.value,
+                        })
+                      }
+                    />
+                  </Field>
+                  <Field label="FAQ for readers / answer engines (one per line: Question | Answer)">
+                    <textarea
+                      rows={4}
+                      className={inputClass}
+                      placeholder="What is a resale property? | A property previously owned..."
+                      value={blogForm.faqText}
+                      onChange={(e) =>
+                        setBlogForm({ ...blogForm, faqText: e.target.value })
+                      }
+                    />
+                  </Field>
+                </div>
+                <button
+                  disabled={busy}
+                  className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#151a3a] px-4 py-3 font-semibold text-white disabled:opacity-60"
+                >
+                  <Save size={17} />
+                  {busy
+                    ? "Saving…"
+                    : editingBlog
+                      ? "Save article"
+                      : "Save article"}
+                </button>
+              </form>
+            </div>
+          )}
+          {tab === "leads" && (
+            <section className="min-w-0 rounded-2xl border border-slate-200 bg-white p-3 sm:p-5">
+              <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-semibold">Property enquiries</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Enquiries submitted through the website are collected here.
+                  </p>
+                </div>
+                <span className="rounded-full bg-indigo-50 px-3 py-1.5 text-sm text-indigo-700">
+                  {leads.length} total
+                </span>
+              </div>
+              <div className="w-full min-w-0 max-w-full overflow-x-auto overscroll-x-contain">
+                <table className="w-full min-w-[760px] table-auto text-left text-sm">
+                  <thead>
+                    <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+                      <th className="py-3 pr-4">Contact</th>
+                      <th className="py-3 pr-4">Property / message</th>
+                      <th className="py-3 pr-4">Received</th>
+                      <th className="py-3">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {leads.map((l) => (
+                      <tr
+                        key={l._id}
+                        className="border-b border-slate-100 align-top"
+                      >
+                        <td className="py-4 pr-4">
+                          <p className="font-medium">{l.name}</p>
+                          <a
+                            className="text-indigo-700"
+                            href={`tel:${l.phone}`}
+                          >
+                            {l.phone}
+                          </a>
+                          {l.email && (
+                            <p className="text-xs text-slate-500">{l.email}</p>
+                          )}
+                        </td>
+                        <td className="max-w-xs py-4 pr-4">
+                          <p className="font-medium">
+                            {l.propertyTitle || "General enquiry"}
+                          </p>
+                          <p className="mt-1 whitespace-pre-wrap text-xs text-slate-500">
+                            {l.message}
+                          </p>
+                        </td>
+                        <td className="py-4 pr-4 text-slate-500">
+                          {new Date(l.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-4">
+                          <select
+                            aria-label={`Status for ${l.name}`}
+                            value={l.status}
+                            onChange={(e) => updateLead(l._id, e.target.value)}
+                            className="rounded-lg border border-slate-200 px-2 py-2 text-xs"
+                          >
+                            {[
+                              "New",
+                              "Contacted",
+                              "Qualified",
+                              "Closed",
+                              "Spam",
+                            ].map((s) => (
+                              <option key={s}>{s}</option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {!leads.length && (
+                  <p className="py-10 text-center text-sm text-slate-500">
+                    No enquiries received yet.
+                  </p>
+                )}
+              </div>
+            </section>
+          )}
+          <p className="pb-5 text-xs text-slate-400">
+            Butterfly Homes CMS · Keep admin credentials private ·{" "}
+            <Link className="underline" href="/" target="_blank">
+              Open public website
+            </Link>
+          </p>
+        </div>
+      </main>
+    </div>
+  );
 }
