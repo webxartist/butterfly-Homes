@@ -6,57 +6,32 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, MapPin } from "lucide-react";
 
 export default function PropertyCard({ project, index = 0 }) {
-  // Get the image belonging to this property
-  const coverImage =
-    project?.coverImage ||
-    project?.media?.find((item) => item?.type === "image")?.url ||
-    project?.images?.[0]?.url ||
-    project?.images?.[0] ||
-    project?.image ||
-    "";
-
-  const propertyName = project?.title || project?.name || "Property";
-
-  const propertyId = project?.id || project?._id;
-
   return (
     <motion.article
-      initial={{ opacity: 0, y: 35 }}
+      initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
       transition={{
-        duration: 0.6,
-        delay: index * 0.1,
+        duration: 0.7,
+        delay: index * 0.12,
       }}
       className="group"
     >
-      <Link
-        href={propertyId ? `/projects/${propertyId}` : "/projects"}
-        className="block"
-      >
+      <Link href={`/projects/${project.id}`}>
         <div className="relative h-[500px] overflow-hidden rounded-[32px] bg-[#EDEFF5] md:h-[560px]">
-          {/* Actual property cover image */}
-          {coverImage ? (
-            <Image
-              key={`${propertyId}-${coverImage}`}
-              src={coverImage}
-              alt={`${propertyName} property`}
-              fill
-              unoptimized
-              priority={index < 2}
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
-            />
-          ) : (
-            <div className="absolute inset-0 flex items-center justify-center bg-slate-100 text-sm text-slate-500">
-              No image uploaded for this property
-            </div>
-          )}
+          {/* Property image */}
+          <Image
+            src={project.image}
+            alt={project.name}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+          />
 
           {/* Gradient */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0D1026]/90 via-[#0D1026]/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0D1026]/90 via-[#0D1026]/10 to-transparent" />
 
-          {/* Label */}
+          {/* Top label */}
           <div className="absolute left-5 top-5">
             <span className="rounded-full border border-white/30 bg-white/15 px-4 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white backdrop-blur-md">
               Featured Project
@@ -71,30 +46,29 @@ export default function PropertyCard({ project, index = 0 }) {
             />
           </div>
 
-          {/* Details */}
+          {/* Content */}
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
             <div className="flex items-end justify-between gap-5">
-              <div className="min-w-0">
+              <div>
                 <h3 className="font-display text-3xl text-white md:text-4xl">
-                  {propertyName}
+                  {project.name}
                 </h3>
 
                 <div className="mt-3 flex items-center gap-2 text-sm text-white/75">
-                  <MapPin size={15} className="shrink-0" />
-                  <span>{project?.location || "Location not specified"}</span>
+                  <MapPin size={15} />
+                  {project.location}
                 </div>
 
-                <p className="mt-2 text-sm text-white/65">
-                  {project?.type || "Property"}
-                </p>
+                <p className="mt-2 text-sm text-white/65">{project.type}</p>
               </div>
 
               <div className="hidden shrink-0 text-right sm:block">
                 <p className="text-[10px] uppercase tracking-[0.18em] text-white/50">
                   Starting
                 </p>
+
                 <p className="mt-1 text-sm font-semibold text-white">
-                  {project?.price || "Price on request"}
+                  {project.price}
                 </p>
               </div>
             </div>
